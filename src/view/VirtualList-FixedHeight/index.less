@@ -1,0 +1,40 @@
+#root {
+  height: 100%;
+}
+.infinite-list-container {
+  // height: calc(100vh - 56px);
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: auto;
+  border: 1px solid black;
+
+  &::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+
+  .infinite-list-phantom {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: -1;
+  }
+
+  .infinite-list {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+
+    &-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border: 1px solid black;
+    }
+  }
+}
