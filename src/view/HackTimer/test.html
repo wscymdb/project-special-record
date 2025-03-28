@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="bd"></div>
+  <script>
+
+    // 每500ms屏幕中会有一个新的内容，也就是1s会有两次输出 这是正常的
+    // 尝试切换标签后 等待一会儿再切回来 会发现1s内输出1次 如果等待时间更长那么输出的频次也会更慢
+    // 记住不要打开控制台 否则会正常输出的
+    let sum = 0;
+    setInterval(() => {
+      const content = '--->' + new Date() + sum;
+      sum += 1;
+      bd.innerHTML += content + '<br/>';
+
+    }, 500);
+
+  </script>
+</body>
+
+</html>

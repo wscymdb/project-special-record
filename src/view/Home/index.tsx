@@ -31,6 +31,20 @@ const items: CollapseProps["items"] = [
       </Flex>
     ),
   },
+  {
+    key: "3",
+    label: "定时器劫持",
+    children: (
+      <Flex vertical>
+        <Link to="/webworker" target="_blank">
+          web worker使用练习
+        </Link>
+        <Link to="/hack-timer" target="_blank">
+          页面
+        </Link>
+      </Flex>
+    ),
+  },
 ];
 
 export default memo(() => {
