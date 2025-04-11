@@ -1,26 +1,50 @@
-import { useState } from "react";
-import useFormStorage from "../hooks/useFormStorage";
+import { memo, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import SyncForm from "../utils/index.ts";
 
-const Page1 = () => {
+const Page1 = memo(() => {
   const [formData, setFormData] = useState({
     username: "",
-    gender: "secret",
+    gender: "male",
   });
   const navigate = useNavigate();
 
-  const formStorage = useFormStorage("page1Form", formData, setFormData);
+  const formStorage = useRef<SyncForm<"react">>(null);
+
+  // 不直接useRef( new SyncForm())是因为每次组件渲染SyncForm都会重新创建，
+  // 可能你会疑惑 useRef不是在整个生命周期只创建一次吗？
+  // 因为useRef传入的参数是一个函数
+  if (!formStorage.current) {
+    formStorage.current = new SyncForm(formData, {
+      type: "react",
+      formId: "page1Form",
+      setFormData,
+      delay: 1000,
+    });
+  }
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData((prevData) => {
+      const newValue = {
+        ...prevData,
+        [name]: value,
+      };
+
+      // 广播新值
+      formStorage.current!.value = newValue;
+      formStorage.current!.debouncedSaveData();
+      return newValue;
+    });
   };
 
+  useEffect(() => {
+    // 初始化表单数据 这样页面可以从缓存中读取数据
+    formStorage.current!.init();
+  }, []);
+
   const nextPage = () => {
-    formStorage.saveData();
+    formStorage.current!.saveData();
     navigate("/page2");
   };
 
@@ -52,6 +76,6 @@ const Page1 = () => {
       </form>
     </div>
   );
-};
+});
 
 export default Page1;
