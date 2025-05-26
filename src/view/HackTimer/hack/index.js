@@ -1,11 +1,21 @@
 (function (workerScript) {
-  console.log(workerScript, 'workerScript');
+  console.log(workerScript, "workerScript");
+
+  /**
+ * 这一部分的功能等价于使用一个单独的外部脚本文件作为 Worker 脚本。但由于在某些场景（如动态生成脚本或跨域限制）中，直接加载外部文件可能存在限制，所以我们将脚本内容转化为一个 Blob 对象。
+  然后通过 URL.createObjectURL 方法生成一个临时 URL，并使用 Worker 构造函数创建一个 Worker 对象来加载该脚本。
+
+为什么使用 Blob？
+  在动态生成代码的场景中，无法提前创建独立的文件（worker.js），因此可以将脚本作为字符串嵌入，用 Blob 封装成一个二进制数据。
+  Blob 生成的动态 URL 比传统文件更加灵活，不需要实际的文件路径。
+ */
+
   if (!/MSIE 10/i.test(navigator.userAgent)) {
     try {
       var blob = new Blob([
         "\
 var fakeIdToId = {};\
-onmessage = function (event) {\
+self.onmessage = function (event) {\
 	var data = event.data,\
 		name = data.name,\
 		fakeId = data.fakeId,\
@@ -16,7 +26,7 @@ onmessage = function (event) {\
 	switch (name) {\
 		case 'setInterval':\
 			fakeIdToId[fakeId] = setInterval(function () {\
-				postMessage({fakeId: fakeId});\
+				self.postMessage({fakeId: fakeId});\
 			}, time);\
 			break;\
 		case 'clearInterval':\
@@ -27,7 +37,7 @@ onmessage = function (event) {\
 			break;\
 		case 'setTimeout':\
 			fakeIdToId[fakeId] = setTimeout(function () {\
-				postMessage({fakeId: fakeId});\
+				self.postMessage({fakeId: fakeId});\
 				if (fakeIdToId.hasOwnProperty (fakeId)) {\
 					delete fakeIdToId[fakeId];\
 				}\
@@ -49,14 +59,16 @@ onmessage = function (event) {\
       /* Blob is not supported, use external script instead */
     }
   }
+
+  // 这一部分是 HackTimer.js 的核心代码，
   var worker,
     fakeIdToCallback = {},
     lastFakeId = 0,
     // 32位有符号整数的最大值 设置一个最大值 防止内存泄漏 当然这并不是js中的最大值，虽然 JavaScript 可以处理更大的整数，但在这种情况下，使用 31 位的范围已经足够满足需求，
     maxFakeId = 0x7fffffff, // 2 ^ 31 - 1, 31 bit, positive values of signed 32 bit integer
-    logPrefix = 'HackTimer.js by puta: ';
+    logPrefix = "HackTimer.js by puta: ";
 
-  if (typeof Worker !== 'undefined') {
+  if (typeof Worker !== "undefined") {
     // 生成一个不重复的id
     function getFakeId() {
       do {
@@ -80,7 +92,7 @@ onmessage = function (event) {\
           parameters: Array.prototype.slice.call(arguments, 2),
         };
         worker.postMessage({
-          name: 'setInterval',
+          name: "setInterval",
           fakeId: fakeId,
           time: time,
         });
@@ -90,7 +102,7 @@ onmessage = function (event) {\
         if (fakeIdToCallback.hasOwnProperty(fakeId)) {
           delete fakeIdToCallback[fakeId];
           worker.postMessage({
-            name: 'clearInterval',
+            name: "clearInterval",
             fakeId: fakeId,
           });
         }
@@ -105,7 +117,7 @@ onmessage = function (event) {\
           isTimeout: true,
         };
         worker.postMessage({
-          name: 'setTimeout',
+          name: "setTimeout",
           fakeId: fakeId,
           time: time,
         });
@@ -115,7 +127,7 @@ onmessage = function (event) {\
         if (fakeIdToCallback.hasOwnProperty(fakeId)) {
           delete fakeIdToCallback[fakeId];
           worker.postMessage({
-            name: 'clearTimeout',
+            name: "clearTimeout",
             fakeId: fakeId,
           });
         }
@@ -132,23 +144,23 @@ onmessage = function (event) {\
           request = fakeIdToCallback[fakeId];
           callback = request.callback;
           parameters = request.parameters;
-          if (request.hasOwnProperty('isTimeout') && request.isTimeout) {
+          if (request.hasOwnProperty("isTimeout") && request.isTimeout) {
             delete fakeIdToCallback[fakeId];
           }
         }
 
-        if (typeof callback === 'string') {
+        if (typeof callback === "string") {
           try {
             callback = new Function(callback);
           } catch (error) {
             console.log(
-              logPrefix + 'Error parsing callback code string: ',
-              error,
+              logPrefix + "Error parsing callback code string: ",
+              error
             );
           }
         }
 
-        if (typeof callback === 'function') {
+        if (typeof callback === "function") {
           callback.apply(window, parameters);
         }
       };
@@ -156,12 +168,12 @@ onmessage = function (event) {\
         console.log(event);
       };
     } catch (error) {
-      console.log(logPrefix + 'Initialisation failed');
+      console.log(logPrefix + "Initialisation failed");
       console.error(error);
     }
   } else {
     console.log(
-      logPrefix + 'Initialisation failed - HTML5 Web Worker is not supported',
+      logPrefix + "Initialisation failed - HTML5 Web Worker is not supported"
     );
   }
-})('HackTimerWorker.js');
+})("HackTimerWorker.js");

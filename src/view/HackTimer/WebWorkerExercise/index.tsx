@@ -1,5 +1,10 @@
 import { memo, useEffect, useState } from "react";
 
+/**
+ * 注意：如果要在这个项目中进行测试 setInterval的降频实验，需要吧HackTimer/index.tsx中引入的hack注释掉
+ * 因为hack会劫持setTimeout/setInterval
+ */
+
 export default memo(() => {
   const [msg, setMsg] = useState("");
 
